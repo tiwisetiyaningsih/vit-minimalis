@@ -1,0 +1,3 @@
+# Dataset Fashion-MNIST
+data/raw/*.csv
+data/processed/
