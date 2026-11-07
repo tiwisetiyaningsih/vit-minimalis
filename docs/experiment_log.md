@@ -6,170 +6,459 @@
 |---|---|
 | Nama Proyek | Vision Transformer (ViT) Minimalis |
 | Dataset | Fashion-MNIST |
-| Tahap | Dataset Exploration |
+| Framework | PyTorch |
 | Bahasa Pemrograman | Python |
-| Library Utama | Pandas, NumPy, Matplotlib |
-| Lingkungan Pengembangan | VS Code Jupyter Notebook |
-| Notebook | `notebooks/01_dataset_exploration.ipynb` |
-| Status | Eksplorasi selesai, evaluasi temuan menunggu keputusan kelompok |
+| Lingkungan Pengembangan | VS Code dan Jupyter Notebook |
+| Perangkat Eksekusi | CPU |
+| Versi PyTorch | 2.15.0+cpu |
+| Status | Eksplorasi, preprocessing, implementasi model, training, dan evaluasi selesai |
 
 ## 2. Tujuan Eksperimen
 
-Dataset Exploration dilakukan untuk memahami karakteristik dan kualitas dataset Fashion-MNIST sebelum digunakan dalam pengembangan model Vision Transformer (ViT) Minimalis.
+Proyek ini bertujuan mengimplementasikan arsitektur Vision Transformer (ViT) secara manual untuk melakukan klasifikasi gambar Fashion-MNIST.
 
-Pemeriksaan meliputi dimensi dataset, struktur kolom, tipe data, missing values, duplikasi, distribusi label, statistik nilai piksel, serta visualisasi gambar.
+Eksperimen mencakup:
+1. Eksplorasi dan pemahaman karakteristik dataset.
+2. Audit kualitas dan duplikasi data.
+3. Preprocessing gambar menggunakan PyTorch.
+4. Implementasi arsitektur Vision Transformer dari scratch.
+5. Training model menggunakan data training.
+6. Validasi model menggunakan validation set.
+7. Evaluasi akhir menggunakan test set.
+8. Analisis hasil klasifikasi dan keterbatasan model.
 
-Audit tambahan dilakukan untuk memeriksa gambar identik berdasarkan 784 fitur piksel, termasuk kemungkinan gambar yang sama muncul pada data train dan test dengan label berbeda.
+Implementasi model dilakukan tanpa menggunakan pretrained ViT, `nn.MultiheadAttention`, maupun `nn.TransformerEncoder`.
 
 ## 3. Informasi Dataset
 
-Dataset terdiri dari dua file:
+Dataset yang digunakan adalah Fashion-MNIST dengan dua file CSV:
 
 - `data/raw/fashion-mnist_train.csv`
 - `data/raw/fashion-mnist_test.csv`
 
-Hasil pemeriksaan awal:
+### 3.1 Karakteristik Dataset
 
-| Keterangan | Train | Test |
+| Karakteristik | Train | Test |
 |---|---:|---:|
-| Jumlah sampel | 60.000 | 10.000 |
+| Jumlah gambar | 60.000 | 10.000 |
 | Jumlah kolom | 785 | 785 |
-| Kolom label | 1 | 1 |
-| Fitur piksel | 784 | 784 |
+| Jumlah fitur piksel | 784 | 784 |
+| Resolusi gambar | 28 × 28 | 28 × 28 |
+| Channel | Grayscale | Grayscale |
+| Tipe data awal | int64 | int64 |
 | Missing values | 0 | 0 |
-| Duplikasi seluruh baris | 43 | 1 |
 
-Seluruh kolom memiliki tipe data `int64`.
-
-## 4. Hasil Eksplorasi
-
-### 4.1 Struktur Dataset
-
-Setiap baris merepresentasikan satu gambar Fashion-MNIST. Dataset memiliki satu kolom label dan 784 kolom fitur piksel.
-
-Jumlah fitur piksel sesuai dengan ukuran gambar 28 × 28 piksel dengan satu channel grayscale.
-
-### 4.2 Distribusi Label
-
-Dataset memiliki 10 kelas dengan distribusi seimbang.
-
-| Label | Kategori | Train | Test |
-|---:|---|---:|---:|
-| 0 | T-shirt/top | 6.000 | 1.000 |
-| 1 | Trouser | 6.000 | 1.000 |
-| 2 | Pullover | 6.000 | 1.000 |
-| 3 | Dress | 6.000 | 1.000 |
-| 4 | Coat | 6.000 | 1.000 |
-| 5 | Sandal | 6.000 | 1.000 |
-| 6 | Shirt | 6.000 | 1.000 |
-| 7 | Sneaker | 6.000 | 1.000 |
-| 8 | Bag | 6.000 | 1.000 |
-| 9 | Ankle boot | 6.000 | 1.000 |
-
-### 4.3 Statistik Nilai Piksel
-
-| Statistik | Train | Test |
-|---|---:|---:|
-| Minimum | 0 | 0 |
-| Maksimum | 255 | 255 |
-| Rata-rata | 72,956831 | 73,160805 |
+Setiap baris dataset terdiri dari satu kolom label dan 784 kolom fitur piksel.
 
 Nilai piksel berada pada rentang 0–255.
 
-### 4.4 Visualisasi Gambar
+### 3.2 Kelas Fashion-MNIST
 
-Beberapa sampel gambar berhasil direkonstruksi dari 784 fitur piksel menjadi gambar grayscale berukuran 28 × 28 piksel.
+Dataset memiliki 10 kelas:
 
-Visualisasi digunakan untuk memeriksa bahwa data numerik dapat direpresentasikan sebagai gambar dan label dapat ditampilkan bersama kategori yang sesuai.
+| Label | Nama Kelas |
+|---:|---|
+| 0 | T-shirt/top |
+| 1 | Trouser |
+| 2 | Pullover |
+| 3 | Dress |
+| 4 | Coat |
+| 5 | Sandal |
+| 6 | Shirt |
+| 7 | Sneaker |
+| 8 | Bag |
+| 9 | Ankle boot |
 
-## 5. Audit Duplikasi Gambar
+Distribusi kelas seimbang:
+- Train: 6.000 gambar per kelas.
+- Test: 1.000 gambar per kelas.
 
-### 5.1 Metode Pemeriksaan
+### 3.3 Hasil Eksplorasi
 
-Audit dilakukan berdasarkan 784 fitur piksel tanpa menyertakan kolom label dalam identifikasi gambar.
+Hasil eksplorasi dataset menunjukkan:
+- Tidak ditemukan missing values.
+- Seluruh fitur piksel menggunakan tipe data `int64`.
+- Nilai piksel berada pada rentang 0–255.
+- Rata-rata nilai piksel train adalah 72.956831.
+- Rata-rata nilai piksel test adalah 73.160805.
+- Gambar berhasil direkonstruksi menjadi bentuk 28 × 28 grayscale.
+- Distribusi kelas train dan test seimbang.
 
-Hash digunakan untuk menemukan kandidat gambar yang kemungkinan identik. Setiap kandidat kemudian diverifikasi dengan membandingkan seluruh nilai piksel secara langsung.
+## 4. Audit Duplikasi Dataset
 
-Dataset asli tidak diubah selama proses audit.
+Audit dilakukan terhadap fitur piksel untuk mengidentifikasi gambar identik di dalam train, di dalam test, dan lintas train-test.
 
-### 5.2 Hasil Audit
+### 4.1 Hasil Audit
 
-| Pemeriksaan | Hasil |
+| Temuan | Hasil |
 |---|---:|
-| Kelompok gambar identik dalam train | 43 |
-| Kelompok gambar identik dalam test | 1 |
-| Kelompok gambar identik lintas train-test | 10 |
-| Konflik label dalam train | 0 |
-| Konflik label dalam test | 0 |
+| Kelompok duplikasi internal train | 43 |
+| Kelompok duplikasi internal test | 1 |
+| Kelompok duplikasi lintas train-test | 10 |
+| Konflik label internal train | 0 |
+| Konflik label internal test | 0 |
 | Konflik label lintas train-test | 1 |
 
-Jumlah tersebut merupakan jumlah kelompok gambar identik berdasarkan hasil audit, bukan jumlah seluruh baris yang terlibat.
+### 4.2 Konflik Label
 
-### 5.3 Verifikasi Inkonsistensi Label
+Ditemukan satu gambar yang memiliki seluruh 784 nilai piksel identik, tetapi memiliki label berbeda pada train dan test.
 
-Ditemukan satu kelompok gambar identik lintas dataset dengan label berbeda.
+| Dataset | Indeks Posisi | Label |
+|---|---:|---|
+| Train | 52205 | 6 — Shirt |
+| Test | 9560 | 0 — T-shirt/top |
 
-| Keterangan | Train | Test |
+Perbandingan langsung terhadap seluruh 784 fitur piksel menghasilkan nilai `True`, dengan jumlah piksel berbeda sebanyak 0.
+
+### 4.3 Kebijakan Penanganan Duplikasi
+
+Kelompok menetapkan kebijakan berikut:
+
+1. Duplikasi internal train sebanyak 43 kelompok dipertahankan.
+2. Duplikasi internal test sebanyak 1 kelompok dipertahankan.
+3. Duplikasi lintas train-test sebanyak 10 kelompok dipertahankan dan didokumentasikan sebagai potensi data leakage.
+4. Satu konflik label lintas train-test didokumentasikan sebagai anomali.
+5. Label asli tidak diubah.
+6. Tidak ada baris yang dihapus dari dataset mentah.
+7. Tidak ada file CSV mentah yang dimodifikasi.
+
+Potensi data leakage dicatat sebagai keterbatasan dataset. Besarnya pengaruh duplikasi terhadap performa model tidak diukur secara terpisah.
+
+## 5. Preprocessing Fashion-MNIST
+
+Preprocessing diimplementasikan menggunakan PyTorch pada:
+
+`src/data/dataset.py`
+
+### 5.1 Tahapan Preprocessing
+
+1. Membaca CSV train dan test.
+2. Memisahkan kolom `label` dan 784 fitur piksel.
+3. Memastikan urutan fitur train dan test konsisten.
+4. Memvalidasi missing values dan rentang piksel.
+5. Melakukan normalisasi nilai piksel.
+6. Mengubah gambar menjadi tensor.
+7. Membuat class `FashionMNISTDataset`.
+8. Membuat DataLoader.
+
+### 5.2 Normalisasi
+
+Nilai piksel dinormalisasi menggunakan:
+
+`pixel_normalized = pixel / 255.0`
+
+Dengan demikian, rentang nilai piksel berubah dari 0–255 menjadi 0–1.
+
+### 5.3 Bentuk Tensor
+
+| Komponen | Bentuk | Tipe Data |
 |---|---|---|
-| Indeks baris | 52205 | 9560 |
-| Label | 6 (Shirt) | 0 (T-shirt/top) |
-| Jumlah fitur piksel | 784 | 784 |
+| Train images | [60000, 1, 28, 28] | float32 |
+| Test images | [10000, 1, 28, 28] | float32 |
+| Train labels | [60000] | int64 |
+| Test labels | [10000] | int64 |
+| Batch images | [64, 1, 28, 28] | float32 |
+| Batch labels | [64] | int64 |
 
-Verifikasi langsung terhadap seluruh 784 nilai piksel menghasilkan:
+Preprocessing berhasil divalidasi dengan rentang piksel 0–1 dan seluruh label berada pada rentang 0–9.
 
-- Hasil perbandingan: `True`
-- Jumlah piksel berbeda: `0`
+Warning NumPy terkait array non-writable diperbaiki dengan membuat tensor label melalui `torch.tensor(labels, dtype=torch.int64)`.
 
-Dengan demikian, kedua baris tersebut memiliki gambar yang benar-benar identik, tetapi label yang berbeda.
+Hasil akhir:
 
-### 5.4 Interpretasi Temuan
+`PREPROCESSING VALIDATION PASSED!`
 
-Temuan tersebut menunjukkan adanya inkonsistensi label pada gambar identik.
+## 6. Implementasi Model Vision Transformer
 
-Selain itu, ditemukan 10 kelompok gambar identik yang muncul pada data train dan test. Kondisi ini merupakan potensi data leakage karena gambar yang terdapat dalam data test juga muncul dalam data train.
+Implementasi model terdapat pada:
 
-Dampak temuan tersebut terhadap performa dan validitas evaluasi model belum diukur karena tahap pelatihan model belum dilakukan.
+`src/models/vit.py`
 
-## 6. Keputusan dan Catatan
+Model dibuat dari scratch menggunakan PyTorch.
 
-Pada tahap Dataset Exploration:
+### 6.1 Konfigurasi Arsitektur
 
-1. Dataset asli tetap dipertahankan.
-2. Tidak ada gambar yang dihapus.
-3. Tidak ada label yang diubah.
-4. Tidak dilakukan pemindahan sampel antara train dan test.
-5. Temuan duplikasi dan inkonsistensi label dicatat untuk dibahas bersama kelompok.
+| Komponen | Nilai |
+|---|---:|
+| Image size | 28 × 28 |
+| Channel | 1 |
+| Patch size | 4 × 4 |
+| Jumlah patch | 49 |
+| Embedding dimension | 64 |
+| Class token | 1 |
+| Positional embedding | Learnable |
+| Total token | 50 |
+| Transformer encoder blocks | 2 |
+| Attention heads | 4 |
+| Dimension per head | 16 |
+| Feed Forward Network | 64 → 128 → 64 |
+| Output classes | 10 |
+| Trainable parameters | 72.074 |
 
-Kebijakan penanganan duplikasi internal, duplikasi lintas dataset, dan inkonsistensi label belum ditetapkan. Keputusan tersebut perlu disepakati sebelum tahap preprocessing.
+### 6.2 Komponen Model
 
-## 7. Status Eksperimen
+Model terdiri atas:
 
-| Aktivitas | Status |
+1. **PatchEmbedding**
+   Membagi gambar menjadi 49 patch berukuran 4 × 4 dan mengubah setiap patch menjadi embedding 64 dimensi.
+
+2. **MultiHeadSelfAttention**
+   Mengimplementasikan Query, Key, Value, Scaled Dot-Product Attention, dan Softmax secara manual.
+
+3. **TransformerEncoderBlock**
+   Menggunakan Layer Normalization, Multi-Head Self-Attention, residual connection, dan Feed Forward Network.
+
+4. **Class Token dan Positional Embedding**
+   Menggunakan satu class token dan learnable positional embedding dengan panjang 50 token.
+
+5. **Classification Head**
+   Menggunakan representasi class token untuk menghasilkan logits dari 10 kelas.
+
+### 6.3 Pengujian Forward Pass
+
+Pengujian dilakukan menggunakan satu batch dari DataLoader.
+
+| Tahap | Bentuk Tensor |
 |---|---|
-| Pembacaan dataset | Selesai |
-| Pemeriksaan struktur dan dimensi | Selesai |
-| Pemeriksaan tipe data | Selesai |
-| Pemeriksaan missing values | Selesai |
-| Pemeriksaan duplikasi baris | Selesai |
-| Audit duplikasi berdasarkan 784 piksel | Selesai |
-| Audit gambar identik lintas dataset | Selesai |
-| Verifikasi konflik label | Selesai |
-| Pemeriksaan distribusi kelas | Selesai |
-| Statistik nilai piksel | Selesai |
-| Rekonstruksi dan visualisasi gambar | Selesai |
-| Validasi struktur kolom | Selesai |
-| Penyusunan kesimpulan notebook | Selesai |
-| Persetujuan kebijakan penanganan data | Menunggu diskusi kelompok |
-| Tahap preprocessing | Belum dimulai |
+| Input | [64, 1, 28, 28] |
+| Patch embedding | [64, 49, 64] |
+| Setelah class token dan positional embedding | [64, 50, 64] |
+| Output classification head | [64, 10] |
 
-## 8. Rencana Selanjutnya
+Pengujian menunjukkan:
+- Patch embedding berhasil.
+- Class token berhasil.
+- Positional embedding berhasil.
+- Transformer berhasil.
+- Classification head berhasil.
+- Tidak ditemukan NaN atau Inf.
+- Model berjalan menggunakan CPU.
 
-1. Meninjau hasil Dataset Exploration bersama seluruh anggota kelompok.
-2. Menentukan kebijakan penanganan duplikasi dan inkonsistensi label.
-3. Mendokumentasikan keputusan kelompok.
-4. Melanjutkan ke preprocessing setelah mendapat persetujuan kelompok.
-5. Memastikan seluruh perubahan dokumentasi dan notebook ditinjau sebelum commit ke GitHub.
+Hasil:
 
----
+`VIT FORWARD PASS TEST PASSED!`
 
-**Catatan:** Experiment log ini mencatat hasil aktual Dataset Exploration. Setiap perubahan kebijakan dan hasil eksperimen berikutnya akan ditambahkan sebagai catatan baru tanpa menghilangkan riwayat eksperimen sebelumnya.
+## 7. Training Model
+
+Training dilakukan menggunakan:
+
+`src/training/train.py`
+
+### 7.1 Pembagian Dataset
+
+| Data | Jumlah |
+|---|---:|
+| Training | 54.000 |
+| Validation | 6.000 |
+| Test | 10.000 |
+
+Validation set diperoleh dari dataset train menggunakan `torch.utils.data.random_split()` dengan random seed 42.
+
+Test set tidak digunakan selama training maupun pemilihan checkpoint.
+
+### 7.2 Konfigurasi Training
+
+| Parameter | Nilai |
+|---|---|
+| Device | CPU |
+| Epoch | 5 |
+| Batch size | 64 |
+| Learning rate | 0.001 |
+| Optimizer | Adam |
+| Loss function | CrossEntropyLoss |
+| Random seed | 42 |
+
+### 7.3 Hasil Training
+
+| Epoch | Train Loss | Train Accuracy | Validation Loss | Validation Accuracy |
+|---:|---:|---:|---:|---:|
+| 1 | 0.7606 | 70.96% | 0.5595 | 79.35% |
+| 2 | 0.5223 | 80.70% | 0.4848 | 81.62% |
+| 3 | 0.4732 | 82.49% | 0.4171 | 83.92% |
+| 4 | 0.4409 | 83.74% | 0.4059 | 85.23% |
+| 5 | 0.4248 | 84.17% | 0.3866 | 85.42% |
+
+Checkpoint terbaik diperoleh pada epoch 5 dengan validation accuracy 85.42%.
+
+File yang dihasilkan:
+- `outputs/best_vit.pth`
+- `outputs/training_history.csv`
+
+Training selesai menggunakan CPU. Tidak dilakukan training ulang setelah checkpoint terbaik berhasil disimpan.
+
+## 8. Evaluasi Model
+
+Evaluasi akhir dilakukan menggunakan:
+
+`src/evaluation/evaluate.py`
+
+Checkpoint yang digunakan:
+
+`outputs/best_vit.pth`
+
+Seluruh 10.000 data test digunakan untuk evaluasi akhir setelah konfigurasi baseline ditetapkan.
+
+Test set tidak digunakan untuk tuning hyperparameter.
+
+### 8.1 Hasil Evaluasi Keseluruhan
+
+| Metrik | Hasil |
+|---|---:|
+| Test samples | 10.000 |
+| Test loss | 0.3785 |
+| Test accuracy | 85.97% |
+| Macro precision | 0.8601 |
+| Macro recall | 0.8597 |
+| Macro F1-score | 0.8585 |
+
+### 8.2 Classification Report
+
+| Kelas | Precision | Recall | F1-score |
+|---|---:|---:|---:|
+| T-shirt/top | 0.81 | 0.83 | 0.82 |
+| Trouser | 0.98 | 0.97 | 0.98 |
+| Pullover | 0.71 | 0.81 | 0.76 |
+| Dress | 0.83 | 0.92 | 0.87 |
+| Coat | 0.77 | 0.74 | 0.76 |
+| Sandal | 0.98 | 0.91 | 0.94 |
+| Shirt | 0.71 | 0.59 | 0.65 |
+| Sneaker | 0.89 | 0.94 | 0.91 |
+| Bag | 0.98 | 0.95 | 0.96 |
+| Ankle boot | 0.93 | 0.94 | 0.93 |
+
+### 8.3 Analisis Hasil
+
+Kelas dengan F1-score tertinggi adalah Trouser dengan nilai 0.98.
+
+Kelas dengan F1-score terendah adalah Shirt dengan nilai 0.65. Recall Shirt sebesar 0.59 menunjukkan bahwa model masih kesulitan mengenali sebagian gambar dari kelas tersebut.
+
+Performa kelas seperti Trouser, Bag, dan Sandal relatif tinggi, sedangkan Pullover, Coat, dan Shirt masih menunjukkan ruang perbaikan.
+
+## 9. Analisis Perkembangan Training
+
+Selama lima epoch:
+- Training accuracy meningkat dari 70.96% menjadi 84.17%.
+- Validation accuracy meningkat dari 79.35% menjadi 85.42%.
+- Training loss menurun dari 0.7606 menjadi 0.4248.
+- Validation loss menurun dari 0.5595 menjadi 0.3866.
+
+Kedua loss terus menurun dan validation accuracy terus meningkat selama eksperimen.
+
+Berdasarkan hasil tersebut, belum terlihat indikasi kuat overfitting selama lima epoch training.
+
+Belum cukup bukti untuk menyimpulkan underfitting secara pasti tanpa eksperimen pembanding atau target performa tertentu.
+
+Test accuracy sebesar 85.97% sedikit lebih tinggi daripada validation accuracy sebesar 85.42%.
+
+### 9.1 Eksperimen Pembanding dan Hyperparameter Tuning
+
+Eksperimen yang telah dilakukan merupakan baseline ViT dengan satu konfigurasi:
+
+- Patch size 4.
+- Embedding dimension 64.
+- Dua transformer encoder blocks.
+- Empat attention heads.
+- MLP 64 → 128 → 64.
+- Lima epoch.
+- Learning rate 0.001.
+- Batch size 64.
+
+Belum dilakukan eksperimen pembanding antararsitektur maupun hyperparameter tuning. Oleh karena itu, hasil yang diperoleh merupakan hasil baseline dan tidak digunakan untuk menyimpulkan konfigurasi ini sebagai konfigurasi optimal.
+
+## 10. Visualisasi
+
+Script evaluasi menghasilkan visualisasi berikut:
+
+| File | Keterangan |
+|---|---|
+| `outputs/training_loss.png` | Grafik training loss dan validation loss |
+| `outputs/training_accuracy.png` | Grafik training accuracy dan validation accuracy |
+| `outputs/confusion_matrix.png` | Visualisasi confusion matrix |
+
+File pendukung:
+- `outputs/evaluation_metrics.json`
+- `outputs/classification_report.txt`
+- `outputs/classification_report.csv`
+- `outputs/confusion_matrix.csv`
+
+## 11. Keterbatasan Eksperimen
+
+Beberapa keterbatasan yang perlu diperhatikan:
+
+1. Model hanya diuji menggunakan satu konfigurasi baseline.
+2. Belum dilakukan hyperparameter tuning.
+3. Belum dilakukan perbandingan dengan arsitektur klasifikasi lain.
+4. Training menggunakan CPU.
+5. Kinerja klasifikasi kelas Shirt masih lebih rendah dibandingkan kelas lainnya.
+6. Dataset memiliki duplikasi lintas train-test yang berpotensi menyebabkan data leakage.
+7. Ditemukan satu gambar identik dengan label berbeda antara train dan test.
+8. Dampak kuantitatif duplikasi dan konflik label terhadap hasil evaluasi belum diukur secara terpisah.
+
+Dataset mentah dipertahankan sesuai kebijakan kelompok. Tidak ada penghapusan gambar maupun perubahan label.
+
+## 12. Struktur File Proyek
+
+```text
+vit-minimalis/
+├── data/
+│   ├── raw/
+│   │   ├── fashion-mnist_train.csv
+│   │   └── fashion-mnist_test.csv
+│   └── processed/
+├── docs/
+│   ├── contribution_log.md
+│   ├── debugging_log.md
+│   ├── experiment_log.md
+│   ├── llm_interaction_log.md
+│   └── project_planning.md
+├── notebooks/
+│   └── 01_dataset_exploration.ipynb
+├── outputs/
+│   ├── best_vit.pth
+│   ├── training_history.csv
+│   ├── training_loss.png
+│   ├── training_accuracy.png
+│   ├── confusion_matrix.png
+│   ├── evaluation_metrics.json
+│   ├── classification_report.txt
+│   ├── classification_report.csv
+│   └── confusion_matrix.csv
+├── src/
+│   ├── data/
+│   │   └── dataset.py
+│   ├── models/
+│   │   └── vit.py
+│   ├── training/
+│   │   └── train.py
+│   └── evaluation/
+│       └── evaluate.py
+├── tests/
+├── .gitignore
+├── README.md
+└── requirements.txt
+```
+
+## 13. Status Akhir Eksperimen
+
+| Tahapan | Status |
+|---|---|
+| Dataset Exploration | Selesai |
+| Duplicate Audit | Selesai |
+| Preprocessing | Selesai |
+| Model Implementation | Selesai |
+| Forward Pass Testing | Berhasil |
+| Training | Selesai |
+| Validation | Selesai |
+| Test Evaluation | Selesai |
+| Visualization | Selesai |
+| Experiment Documentation | Diperbarui |
+
+## 14. Kesimpulan
+
+Model Vision Transformer minimalis berhasil diimplementasikan dari scratch menggunakan PyTorch dan dilatih pada dataset Fashion-MNIST.
+
+Model menghasilkan test accuracy sebesar 85.97%, macro precision 0.8601, macro recall 0.8597, dan macro F1-score 0.8585.
+
+Model memperoleh performa terbaik pada kelas Trouser dengan F1-score 0.98, sedangkan kelas Shirt memiliki F1-score terendah sebesar 0.65.
+
+Eksperimen berhasil menyelesaikan rangkaian eksplorasi dataset, preprocessing, implementasi model, training, validasi, evaluasi, dan visualisasi. Hasil ini merupakan baseline yang masih dapat dikembangkan melalui eksperimen lanjutan.

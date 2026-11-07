@@ -1,3 +1,11 @@
 # Dataset Fashion-MNIST
 data/raw/*.csv
 data/processed/
+
+# Model checkpoints and training outputs
+outputs/
+*.pt
+*.pth
+# Python cache
+__pycache__/
+*.py[cod]
